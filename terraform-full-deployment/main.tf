@@ -141,7 +141,7 @@ resource "helm_release" "cert_manager" {
 // Kubernetes provider - manifest for ingress
 
 resource "kubernetes_manifest" "test-ingress" {
-  count = var.create-A-record ? 1 : 0 
+  count = var.create-manifest ? 1 : 0 
   depends_on = [data.azurerm_kubernetes_cluster.aks , helm_release.ingress] 
   manifest  = yamldecode(file("createIngress.yml"))
 }
