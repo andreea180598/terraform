@@ -143,5 +143,5 @@ resource "helm_release" "cert_manager" {
 resource "kubernetes_manifest" "test-ingress" {
   count = var.create-A-record ? 1 : 0 
   depends_on = [data.azurerm_kubernetes_cluster.aks , helm_release.ingress] 
-  manifest  = yamldecode(file("C:/Users/ZZ0311826/Desktop/altele/terraform/terraform-full-deployment/createIngress.yml"))
+  manifest  = yamldecode(file("createIngress.yml"))
 }
