@@ -114,8 +114,9 @@ variable "create-A-record" {
   description = "if true create A record DNS rule"
 }
 
-variable "create-data" {
+variable "create-manifest" {
   type        = bool
-  default     = false
-  description = "if true create data for ip "
+  default     = true
+  description = "if true create ingress kube manifest"
 }
+ 
