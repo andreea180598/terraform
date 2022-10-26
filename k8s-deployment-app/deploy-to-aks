@@ -1,0 +1,39 @@
+pool:
+   name: andreea
+
+
+steps:
+- script: |
+    cd
+    dir
+    docker build -t acrandreea1898.azurecr.io/hello-app:v.7 .
+  displayName: 'build image'
+
+- script: |
+    az acr login --name acrandreea1898
+  displayName: 'login to acr'
+
+- script: |
+    docker push acrandreea1898.azurecr.io/hello-app:v.7
+  displayName: 'push image to acr'
+
+- script: |
+    az aks get-credentials --resource-group andreea-rg  --name andreea-aks --overwrite-existing
+  displayName: 'login to aks'
+
+- script: |
+    az aks update -n andreea-aks -g andreea-rg --attach-acr acrandreea1898
+  displayName: 'attach acr'
+
+- script: |
+    kubectl create namespace mynamespace
+  displayName: 'create namespace'
+
+- script: |
+    kubectl apply -f deployment.yml
+  displayName: 'apply deployment.yml'
+
+- script: |
+    docker images
+    kubectl get pods -n mynamespace
+  displayName: 'list pods'

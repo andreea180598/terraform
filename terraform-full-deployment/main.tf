@@ -1,9 +1,8 @@
 // AKS resource
-resource "azurerm_kubernetes_cluster" "aks-andreea" {
-  //count               = var.create-aks ? 1 : 0
+resource "azurerm_kubernetes_cluster" "test" {
   name                = var.aks_name
-  location            = data.azurerm_resource_group.andreea-rg.location
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
+  location            = data.azurerm_resource_group.test.location
+  resource_group_name = data.azurerm_resource_group.test.name
   dns_prefix          = var.aks_dns_prefix
 
   default_node_pool {
@@ -22,11 +21,10 @@ resource "azurerm_kubernetes_cluster" "aks-andreea" {
 }
 
 // ACR resource
-resource "azurerm_container_registry" "acr-andreea" {
-  count               = var.create-acr ? 1 : 0
+resource "azurerm_container_registry" "test" {
   name                = var.acr_name
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
-  location            = data.azurerm_resource_group.andreea-rg.location
+  resource_group_name = data.azurerm_resource_group.test.name
+  location            = data.azurerm_resource_group.test.location
   sku                 = var.sku_acr
   admin_enabled       = false
 }
@@ -36,9 +34,9 @@ resource "azurerm_container_registry" "acr-andreea" {
 
 resource "azurerm_mysql_server" "mysql-server" {
   count               = var.create-DB-server ? 1 : 0
-  name                = "mysql-server-andreea"
-  location            = data.azurerm_resource_group.andreea-rg.location
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
+  name                = var.mysql_server_name
+  location            = data.azurerm_resource_group.test.location
+  resource_group_name = data.azurerm_resource_group.test.name
 
   administrator_login          = var.mysql_admin_username
   administrator_login_password = var.mysql_admin_password
@@ -58,10 +56,10 @@ resource "azurerm_mysql_server" "mysql-server" {
 
 // mysql DB resource
 
-resource "azurerm_mysql_database" "mysql-db" {
+resource "azurerm_mysql_database" "test" {
   count               = var.create-DB ? 1 : 0
   name                = "mysql-db-andreea"
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
+  resource_group_name = data.azurerm_resource_group.test.name
   server_name         = var.mysql_server_name
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
@@ -69,10 +67,10 @@ resource "azurerm_mysql_database" "mysql-db" {
 
 //FW rule for DB
 
-resource "azurerm_mysql_firewall_rule" "mysql-fwr" {
+resource "azurerm_mysql_firewall_rule" "test" {
   count               = var.create-DB-firewall ? 1 : 0
   name                = "mysql-fwr-andreea"
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
+  resource_group_name = data.azurerm_resource_group.test
   server_name         = var.mysql_server_name
   start_ip_address    = var.mysql_ip_address
   end_ip_address      = var.mysql_ip_address
@@ -81,37 +79,35 @@ resource "azurerm_mysql_firewall_rule" "mysql-fwr" {
 
 // public ip resource
 
-resource "azurerm_public_ip" "andreea-public-ip" {
+resource "azurerm_public_ip" "test" {
   name                = "andreea-public-ip"
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
-  location            = data.azurerm_resource_group.andreea-rg.location
+  resource_group_name = data.azurerm_resource_group.test.name
+  location            = data.azurerm_resource_group.test.location
   allocation_method   = "Static"
 }
 
 // DNS Zone resource
 
-resource "azurerm_dns_zone" "andreea-dns" {
+resource "azurerm_dns_zone" "test" {
   name                = "andreea.com"
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
+  resource_group_name = data.azurerm_resource_group.test.name
 }
 
 // DNS A record resource which depends on the creation of ip_address data
 
-resource "azurerm_dns_a_record" "andreea-A-record" {
+resource "azurerm_dns_a_record" "test" {
   name                = "andreea-A-record"
-  zone_name           = azurerm_dns_zone.andreea-dns.name
-  resource_group_name = data.azurerm_resource_group.andreea-rg.name
+  zone_name           = azurerm_dns_zone.test.name
+  resource_group_name = data.azurerm_resource_group.test.name
   ttl                 = 300
-  target_resource_id  = data.azurerm_public_ip.andreea_public_ip.id
-  depends_on = [
-    data.azurerm_public_ip.andreea_public_ip
-  ]
+  target_resource_id  = data.azurerm_public_ip.test.id
+  depends_on = [data.azurerm_public_ip.test]
 }
 
 // Helm - install ingress controller- resource
 
 resource "helm_release" "ingress" {
-  depends_on       = [data.azurerm_kubernetes_cluster.aks]
+  depends_on       = [data.azurerm_kubernetes_cluster.test]
   name             = "andreea-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx/"
   chart            = "ingress-nginx"
@@ -122,7 +118,7 @@ resource "helm_release" "ingress" {
 // Helm - install cert-manager- resource
 
 resource "helm_release" "cert_manager" {
-  depends_on       = [data.azurerm_kubernetes_cluster.aks]
+  depends_on       = [data.azurerm_kubernetes_cluster.test]
   name             = "cert-manager-andreea"
   repository       = "https://charts.jetstack.io"
   chart            = "cert-manager"
@@ -137,11 +133,10 @@ resource "helm_release" "cert_manager" {
 }
 
 
-
 // Kubernetes provider - manifest for ingress
 
 resource "kubernetes_manifest" "test-ingress" {
   count = var.create-manifest ? 1 : 0 
-  depends_on = [data.azurerm_kubernetes_cluster.aks , helm_release.ingress] 
-  manifest  = yamldecode(file("createIngress.yml"))
+  depends_on = [data.azurerm_kubernetes_cluster.test , helm_release.ingress] 
+  manifest  = yamldecode(file("C:/Users/ZZ0311826/Desktop/altele/terraform/terraform-full-deployment/createIngress.yml"))
 }

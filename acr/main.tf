@@ -1,9 +1,9 @@
-resource "azurerm_resource_group" "acr-andreea" {
+resource "azurerm_resource_group" "test" {
   name     = var.resource_group_name
   location = var.location
 }
 
-resource "azurerm_container_registry" "acr-andreea" {
+resource "azurerm_container_registry" "test" {
   name                = "${var.acr_name}1898"
   resource_group_name = var.resource_group_name
   location            = var.location
@@ -11,23 +11,3 @@ resource "azurerm_container_registry" "acr-andreea" {
   admin_enabled       = false
 }
 
-resource "azurerm_kubernetes_cluster" "aks-andreea" {
-  name                = "aks-andreea"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  dns_prefix          = "andreeaaks-dns-prefix"
-
-  default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_B2s"
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  tags = {
-    Environment = "DEV"
-  }
-}

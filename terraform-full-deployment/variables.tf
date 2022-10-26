@@ -66,17 +66,6 @@ variable "mysql_ip_address" {
 
 
 //vars for creating or not resources
-variable "create-aks" {
-  type        = bool
-  default     = true
-  description = "if true create AKS"
-}
-
-variable "create-acr" {
-  type        = bool
-  default     = true
-  description = "if true create ACR"
-}
 
 variable "create-DB-server" {
   type        = bool
@@ -110,13 +99,12 @@ variable "create-DNS-zone" {
 
 variable "create-A-record" {
   type        = bool
-  default     = true
+  default     = false
   description = "if true create A record DNS rule"
 }
 
 variable "create-manifest" {
   type        = bool
   default     = true
-  description = "if true create ingress kube manifest"
+  description = "if true create nginx ingress"
 }
- 

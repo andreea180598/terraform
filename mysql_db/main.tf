@@ -1,12 +1,13 @@
-resource "azurerm_resource_group" "mysql-resource" {
-  name     = "mysql-resource-andreea"
+resource "azurerm_resource_group" "test" {
+  name     = "andreea-rg"
   location = "East US"
 }
 
-resource "azurerm_mysql_server" "mysql-server" {
+//Mysql Server resource
+resource "azurerm_mysql_server" "test" {
   name                = "mysql-server-andreea"
-  location            = azurerm_resource_group.mysql-resource.location
-  resource_group_name = azurerm_resource_group.mysql-resource.name
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
 
   administrator_login          = "andreea"
   administrator_login_password = "1234qwer!"
@@ -24,19 +25,21 @@ resource "azurerm_mysql_server" "mysql-server" {
   ssl_minimal_tls_version_enforced  = "TLS1_0"
 }
 
-resource "azurerm_mysql_database" "mysql-db" {
+//Mysql Database resource
+resource "azurerm_mysql_database" "test" {
   name                = "mysql-db-andreea"
-  resource_group_name = azurerm_resource_group.mysql-resource.name
-  server_name         = azurerm_mysql_server.mysql-server.name
+  resource_group_name = azurerm_resource_group.test.name
+  server_name         = azurerm_mysql_server.test.name
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
 }
 
 
-resource "azurerm_mysql_firewall_rule" "mysql-fwr" {
+//FW for database resource
+resource "azurerm_mysql_firewall_rule" "test" {
   name                = "mysql-fwr-andreea"
-  resource_group_name = azurerm_resource_group.mysql-resource.name
-  server_name         = azurerm_mysql_server.mysql-server.name
+  resource_group_name = azurerm_resource_group.test.name
+  server_name         = azurerm_mysql_server.test.name
   start_ip_address    = "188.26.140.143"
   end_ip_address      = "188.26.140.143"
 }

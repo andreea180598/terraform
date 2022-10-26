@@ -1,19 +1,6 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "=3.26.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
-}
-
 //create resource group 
-resource "azurerm_resource_group" "mtc-rg" {
-  name     = "mtc-resources"
+resource "azurerm_resource_group" "test" {
+  name     = "andreea-rg"
   location = "East US"
 
   tags = {
@@ -22,10 +9,10 @@ resource "azurerm_resource_group" "mtc-rg" {
 }
 
 //create a virtual network
-resource "azurerm_virtual_network" "mtc-vn" {
-  name                = "mtc-network"
-  resource_group_name = azurerm_resource_group.mtc-rg.name
-  location            = azurerm_resource_group.mtc-rg.location
+resource "azurerm_virtual_network" "test" {
+  name                = "vnetwork"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
   address_space       = ["10.123.0.0/16"]
 
   tags = {
@@ -34,19 +21,19 @@ resource "azurerm_virtual_network" "mtc-vn" {
 }
 
 //create subnet
-resource "azurerm_subnet" "mtc-subnet" {
-  name                 = "mtc-subnet"
-  resource_group_name  = azurerm_resource_group.mtc-rg.name
-  virtual_network_name = azurerm_virtual_network.mtc-vn.name
+resource "azurerm_subnet" "test" {
+  name                 = "test-subnet"
+  resource_group_name  = azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
   address_prefixes     = ["10.123.1.0/24"]
 
 }
 
 //create security group
-resource "azurerm_network_security_group" "mtc-sg" {
-  name                = "mtc-sg"
-  location            = azurerm_resource_group.mtc-rg.location
-  resource_group_name = azurerm_resource_group.mtc-rg.name
+resource "azurerm_network_security_group" "test" {
+  name                = "test-sg"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
 
   tags = {
     environment = "dev"
@@ -54,8 +41,8 @@ resource "azurerm_network_security_group" "mtc-sg" {
 }
 
 //create nw security rule
-resource "azurerm_network_security_rule" "mtc-dev-rule" {
-  name                        = "mtc-dev-rule"
+resource "azurerm_network_security_rule" "test" {
+  name                        = "dev-rule"
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
@@ -64,20 +51,20 @@ resource "azurerm_network_security_rule" "mtc-dev-rule" {
   destination_port_range      = "*"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.mtc-rg.name
-  network_security_group_name = azurerm_network_security_group.mtc-sg.name
+  resource_group_name         = azurerm_resource_group.test.name
+  network_security_group_name = azurerm_network_security_group.test.name
 }
 
-resource "azurerm_subnet_network_security_group_association" "mtc-sga" {
-  subnet_id                 = azurerm_subnet.mtc-subnet.id
-  network_security_group_id = azurerm_network_security_group.mtc-sg.id
+resource "azurerm_subnet_network_security_group_association" "test" {
+  subnet_id                 = azurerm_subnet.test.id
+  network_security_group_id = azurerm_network_security_group.test.id
 }
 
 //create public ip with dynamic allocation
-resource "azurerm_public_ip" "mtc-ip" {
-  name                = "mtc-ip"
-  resource_group_name = azurerm_resource_group.mtc-rg.name
-  location            = azurerm_resource_group.mtc-rg.location
+resource "azurerm_public_ip" "test" {
+  name                = "public-ip"
+  resource_group_name = azurerm_resource_group.test.name
+  location            = azurerm_resource_group.test.location
   allocation_method   = "Dynamic"
 
   tags = {
@@ -86,16 +73,16 @@ resource "azurerm_public_ip" "mtc-ip" {
 }
 
 //create nw interface
-resource "azurerm_network_interface" "mtc-nic" {
-  name                = "mtc-nic"
-  location            = azurerm_resource_group.mtc-rg.location
-  resource_group_name = azurerm_resource_group.mtc-rg.name
+resource "azurerm_network_interface" "test" {
+  name                = "nic"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.mtc-subnet.id
+    subnet_id                     = azurerm_subnet.test.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.mtc-ip.id
+    public_ip_address_id          = azurerm_public_ip.test.id
   }
 
   tags = {
@@ -103,13 +90,13 @@ resource "azurerm_network_interface" "mtc-nic" {
   }
 }
 
-resource "azurerm_linux_virtual_machine" "mtc-vm" {
-  name                  = "mtc-vm"
-  resource_group_name   = azurerm_resource_group.mtc-rg.name
-  location              = azurerm_resource_group.mtc-rg.location
+resource "azurerm_linux_virtual_machine" "test" {
+  name                  = "linux-vm"
+  resource_group_name   = azurerm_resource_group.test.name
+  location              = azurerm_resource_group.test.location
   size                  = "Standard_D2s_v3"
   admin_username        = "andreea"
-  network_interface_ids = [azurerm_network_interface.mtc-nic.id]
+  network_interface_ids = [azurerm_network_interface.test.id]
 
   custom_data = filebase64("customdata.sh")
 
@@ -131,14 +118,13 @@ resource "azurerm_linux_virtual_machine" "mtc-vm" {
   }
 }
 
-//to show public ip in tfstate
-data "azurerm_public_ip" "mtc-ip-data" {
-  name                = azurerm_public_ip.mtc-ip.name
-  resource_group_name = azurerm_resource_group.mtc-rg.name
+data "azurerm_public_ip" "test" {
+  name                = azurerm_public_ip.test.name
+  resource_group_name = azurerm_resource_group.test.name
 }
 
 //save the public ip in output -> ip_address is the variable name from tfstate
 // terraform output -> shows the public_ip_address output result
 output "public_ip_address" {
-    value = "${azurerm_linux_virtual_machine.mtc-vm.name}: ${data.azurerm_public_ip.mtc-ip-data.ip_address}"
+    value = "${azurerm_linux_virtual_machine.test.name}: ${data.azurerm_public_ip.test.ip_address}"
 }
